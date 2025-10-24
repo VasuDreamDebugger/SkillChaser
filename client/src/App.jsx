@@ -1,0 +1,17 @@
+import { useState } from "react";
+import AllRoutes from "./Routes";
+import { Routes, Route, useMatch } from "react-router-dom";
+import NavBar from "./components/Student/NavBar";
+import { Toaster, toast } from "react-hot-toast";
+const App = () => {
+  const isEducator = useMatch("/educator/*");
+  return (
+    <div className="min-h-screen bg-white text-default">
+      <Toaster />
+      {!isEducator ? <NavBar /> : ""}
+      <AllRoutes />
+    </div>
+  );
+};
+
+export default App;

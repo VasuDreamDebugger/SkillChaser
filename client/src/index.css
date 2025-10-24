@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Jim+Nightshade&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jim+Nightshade&family=Lavishly+Yours&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jim+Nightshade&family=Lavishly+Yours&family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+
+*{
+  font-family: Jim Nightshade, cursive;
+  font-family: Lavishly Yours, cursive;
+  font-family: Outfit, sans-serif;
+   
+  /* font-weight: 200; */
+}
