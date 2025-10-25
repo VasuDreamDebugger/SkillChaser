@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { assets } from "../../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
 import { SignIn, useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { AppContext } from "../../context/AppContext.js";
 
 const NavBar = () => {
   const { openSignIn } = useClerk();
   const { user } = useUser();
   const navigate = useNavigate();
-
+  const { isEducator } = useContext(AppContext);
   const isCourseListPage = location.pathname.includes("/course-list");
   return (
     <div
@@ -25,8 +26,10 @@ const NavBar = () => {
         {/* For Desktop view */}
         <div className="hidden md:flex items-center gap-5 text-gray-500">
           <div className="flex items-center gap-2">
-            <button>Become Educator </button>|
-            <Link to="/my-enrollments"> My Enrollments</Link>
+            <button onClick={() => navigate("/educator")}>
+              {isEducator ? "Educator Dashboard" : "Become Educator"}{" "}
+            </button>
+            |<Link to="/my-enrollments"> My Enrollments</Link>
           </div>
           {user ? (
             <UserButton />

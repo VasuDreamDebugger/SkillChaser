@@ -11,10 +11,10 @@ const CoursesSection = () => {
         Learn from the <span className="text-green-600">Best..</span>
       </h2>
       <p className="text-sm md:text-base text-gray-500 mt-3">
-        Dicover our top-rated courses across various categories.From coding and
+        Discover our top-rated courses across various categories.From coding and
         design to Business Development
       </p>
-      <div className="grid grid-cols-4 px-4 md:px-20 md:mt-10 gap-4">
+      <div className="grid md:grid-cols-4 sm:grid-cols-2 px-4 md:px-20 md:mt-10 gap-4">
         {allCourses.slice(0, 4).map((course, index) => (
           <CourseCard key={index} course={course} />
         ))}
@@ -26,7 +26,7 @@ const CoursesSection = () => {
           scrollTo(0, 0);
         }}
       >
-        Show all courses{" >"}
+        Show all courses
       </Link>
     </div>
   );
