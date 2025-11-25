@@ -3,6 +3,7 @@ import AllRoutes from "./Routes";
 import { Routes, Route, useMatch } from "react-router-dom";
 import NavBar from "./components/Student/NavBar";
 import { Toaster, toast } from "react-hot-toast";
+import "quill/dist/quill.snow.css";
 const App = () => {
   const isEducator = useMatch("/educator/*");
   return (
