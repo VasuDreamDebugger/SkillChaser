@@ -2,12 +2,16 @@ import { createContext, useEffect, useState } from "react";
 import { dummyCourses } from "../assets/assets";
 import { AppContext } from "./AppContext";
 import humanizeDuration from "humanize-duration";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { jwtDecode } from "jwt-decode";
 
 export const AppContextProvider = (props) => {
   const currency = import.meta.env.VITE_CURRENCY;
   const [allCourses, setAllCourses] = useState([]);
   const [isEducator, setIsEducator] = useState(true);
   const [enrolledCourses, setEnrolledCourse] = useState([]);
+  const { getToken } = useAuth();
+  const { user } = useUser();
 
   //fetch all course
   const fetchAllCourses = async () => {
@@ -73,6 +77,36 @@ export const AppContextProvider = (props) => {
     fetchAllCourses();
     fetchEnrolledCourse();
   }, []);
+
+  const logToken = async () => {
+    const token = await getToken(); // returns a JWT string
+    console.log(token); // just the token string
+    const payload = jwtDecode(token);
+    console.log(payload);
+  };
+
+  // const BecomeEdu = async () => {
+  //   try {
+  //     let token = await getToken();
+  //     await fetch("http://localhost:5000/api/educator/update-role", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`, // attach token here
+  //       },
+  //       body: JSON.stringify({ role: "educator" }),
+  //     });
+  //   } catch (error) {
+  //     console.log(error.stack);
+  //   }
+  // };
+
+  useEffect(() => {
+    if (user) {
+      logToken();
+      // BecomeEdu();
+    }
+  }, [user]);
 
   const value = {
     currency,

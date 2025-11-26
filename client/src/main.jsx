@@ -6,7 +6,8 @@ import { BrowserRouter } from "react-router-dom";
 import { AppContextProvider } from "./context/AppContext.jsx";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { Toaster, toast } from "react-hot-toast";
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY =
+  "pk_test_bGVuaWVudC1idWZmYWxvLTUzLmNsZXJrLmFjY291bnRzLmRldiQ";
 
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
