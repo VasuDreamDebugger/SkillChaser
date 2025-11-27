@@ -18,16 +18,21 @@ app.get("/", (req, res) => {
   res.send("Hello world");
 });
 
-// Simple API ping for client-server connectivity checks
-app.get("/api/ping", express.json(), (req, res) => {
+app.get("/api/ping", (req, res) => {
   res.json({ ok: true, message: "pong from server" });
 });
 
 app.use("/api/educator", express.json(), educatorRoutes);
 
-// Use raw body for Clerk webhook route so the Svix signature can be verified
-app.post("/clerk", express.json(), clerkWebhooks);
+// Clerk webhook route must use raw body
+app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+
+// Local listen only
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`server running at PORT ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`server running at PORT ${PORT}`);
+  });
+}
+
+export default app;
