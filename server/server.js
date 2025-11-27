@@ -27,11 +27,11 @@ app.use("/api/educator", express.json(), educatorRoutes);
 // Clerk webhook route must use raw body
 app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
 
-// Local listen only
-const PORT = process.env.PORT || 5000;
-if (require.main === module) {
+// ✅ Only run app.listen if ENVIRONMENT is "development"
+if (process.env.ENVIRONMENT === "development") {
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log(`server running at PORT ${PORT}`);
+    console.log(`Local server running at http://localhost:${PORT}`);
   });
 }
 
