@@ -4,6 +4,7 @@ import connectDB from "./configs/mongodb.js";
 import { clerkWebhooks } from "./controllers/webhooks.js";
 import educatorRoutes from "./routes/educatorRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
+import connectCloudinary from "./configs/cloudinary.js";
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(clerkMiddleware());
 
 connectDB();
+await connectCloudinary();
 
 app.get("/", (req, res) => {
   res.send("Hello world");
