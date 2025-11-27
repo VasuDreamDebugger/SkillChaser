@@ -8,29 +8,36 @@ export const clerkWebhooks = async (req, res) => {
       return res.status(500).json({ message: "server configuration error" });
     }
 
-    const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    // Pass the raw body (Buffer) to Svix verify. The route uses express.raw({type: 'application/json'}).
-    // await whook.verify(JSON.stringify(req.body), {
-    //   "svix-id": req.headers["svix-id"],
-    //   "svix-timestamp": req.headers["svix-timestamp"],
-    //   "svix-signature": req.headers["svix-signature"],
-    // });
+    // Parse raw body if needed
+    let payload;
+    if (Buffer.isBuffer(req.body)) {
+      try {
+        payload = JSON.parse(req.body.toString("utf8"));
+      } catch (err) {
+        console.error("Failed to parse webhook body:", err);
+        return res.status(400).json({ message: "invalid JSON payload" });
+      }
+    } else {
+      payload = req.body;
+    }
 
-    // req.body is a Buffer when using express.raw for this route.
-    // Parse it to JSON; if it's already an object, use it directly.
-    // let payload;
-    // if (Buffer.isBuffer(req.body)) {
-    //   try {
-    //     payload = JSON.parse(req.body.toString("utf8"));
-    //   } catch (err) {
-    //     console.error("Failed to parse webhook body:", err);
-    //     return res.status(400).json({ message: "invalid JSON payload" });
-    //   }
-    // } else {
-    //   payload = req.body;
-    // }
+    // Verify signature only in production
+    if (process.env.ENVIRONMENT !== "development") {
+      const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+      try {
+        await whook.verify(JSON.stringify(payload), {
+          "svix-id": req.headers["svix-id"],
+          "svix-timestamp": req.headers["svix-timestamp"],
+          "svix-signature": req.headers["svix-signature"],
+        });
+      } catch (err) {
+        console.error("Signature verification failed:", err);
+        return res.status(400).json({ message: "invalid signature" });
+      }
+    }
 
-    const { data, type } = req.body;
+    const { data, type } = payload;
+
     switch (type) {
       case "user.created": {
         const userData = {
@@ -41,13 +48,11 @@ export const clerkWebhooks = async (req, res) => {
           imageUrl: data.image_url || null,
         };
 
-        // const newUser = new User(userData);
-        // await newUser.save();
         await User.create(userData);
         console.log("New user created:", data.first_name, data.last_name);
-        res.status(201).json({ message: "newUser created" });
-        break;
+        return res.status(201).json({ message: "newUser created" });
       }
+
       case "user.updated": {
         const userData = {
           email: data?.email_addresses?.[0]?.email_address || null,
@@ -55,23 +60,24 @@ export const clerkWebhooks = async (req, res) => {
             [data.first_name, data.last_name].filter(Boolean).join(" ") || null,
           imageUrl: data.image_url || null,
         };
+
         await User.findByIdAndUpdate(data.id, userData);
         console.log("User updated:", data.first_name, data.last_name);
-        res.status(200).json({ message: "user updated successfully" });
-        break;
+        return res.status(200).json({ message: "user updated successfully" });
       }
+
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
         console.log("User deleted:", data.id);
-        res.status(200).json({ message: "user deleted" });
-        break;
+        return res.status(200).json({ message: "user deleted" });
       }
+
       default:
-        res.status(400).json({ message: "unhandled event type" });
-        break;
+        console.warn("Unhandled event type:", type);
+        return res.status(400).json({ message: "unhandled event type" });
     }
   } catch (error) {
-    console.log(error.stack);
-    res.status(400).json({ message: error.message });
+    console.error(error.stack);
+    return res.status(400).json({ message: error.message });
   }
 };
