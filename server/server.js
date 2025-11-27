@@ -26,7 +26,7 @@ app.get("/api/ping", express.json(), (req, res) => {
 app.use("/api/educator", express.json(), educatorRoutes);
 
 // Use raw body for Clerk webhook route so the Svix signature can be verified
-app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+app.post("/clerk", express.json(), clerkWebhooks);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`server running at PORT ${PORT}`);
