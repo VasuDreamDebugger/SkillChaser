@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/mongodb.js";
-import { clerkWebhooks } from "./controllers/webhooks.js";
+import { clerkWebhooks, stripeWebhooks } from "./controllers/webhooks.js";
 import educatorRoutes from "./routes/educatorRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
 import connectCloudinary from "./configs/cloudinary.js";
@@ -26,6 +26,7 @@ app.use("/api/educator", express.json(), educatorRoutes);
 
 // Clerk webhook route must use raw body
 app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 // ✅ Only run app.listen if ENVIRONMENT is "development"
 if (process.env.ENVIRONMENT === "development") {

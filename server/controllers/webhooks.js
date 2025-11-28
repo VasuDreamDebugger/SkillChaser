@@ -1,5 +1,8 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
+import Stripe from "stripe";
+import Purchase from "../models/Purchase.js";
+import Course from "../models/Course.js";
 
 export const clerkWebhooks = async (req, res) => {
   try {
@@ -80,4 +83,61 @@ export const clerkWebhooks = async (req, res) => {
     console.error(error.stack);
     return res.status(400).json({ message: error.message });
   }
+};
+
+const stripeWebHooks = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.log(`⚠️  Webhook signature verification failed.`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      const paymentIntent = event.data.object;
+      const paymentIntentId = paymentIntent.id;
+      const session = await stripe.checkout.sessions.list({
+        payment_intent: paymentIntentId,
+      });
+
+      const { purchaseId } = session.data[0].metadata;
+
+      const purchaseData = await Purchase.findById(purchaseId);
+      const userData = await User.findById(purchaseData.userId);
+      const courseData = await Course.findById(
+        purchaseData.courseId.toString()
+      );
+
+      courseData.enrolledStudents.push(userData);
+      await courseData.save();
+      userData.enrolledCourses.push(courseData._id);
+      await userData.save();
+
+      purchaseData.status = "completed";
+      await purchaseData.save();
+      break;
+    case "payment_intent.payment_failed":
+      const paymentFailedIntent = event.data.object;
+      const paymentFailedIntentId = paymentFailedIntent.id;
+      const failedSession = await stripe.checkout.sessions.list({
+        payment_intent: paymentFailedIntentId,
+      });
+      const { purchaseId: failedPurchaseId } = failedSession.data[0].metadata;
+
+      const failedPurchaseData = await Purchase.findById(failedPurchaseId);
+      failedPurchaseData.status = "failed";
+      await failedPurchaseData.save();
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+  res.json({ received: true });
 };
