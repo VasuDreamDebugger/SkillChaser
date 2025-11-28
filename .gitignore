@@ -2,3 +2,7 @@
 # ignore environment files
 server/.env
 client/.env
+# ignore environment files
+/.env
+/client/.env
+/server/.env
