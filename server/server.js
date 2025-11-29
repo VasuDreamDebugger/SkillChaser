@@ -5,6 +5,7 @@ import { clerkWebhooks, stripeWebhooks } from "./controllers/webhooks.js";
 import educatorRoutes from "./routes/educatorRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
 import connectCloudinary from "./configs/cloudinary.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get("/api/ping", (req, res) => {
 });
 
 app.use("/api/educator", express.json(), educatorRoutes);
+app.use("/api/user", express.json(), userRouter);
 
 // Clerk webhook route must use raw body
 app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
