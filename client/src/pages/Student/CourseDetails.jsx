@@ -5,6 +5,8 @@ import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import Footer from "../../components/Student/Footer";
 import Youtube from "react-youtube";
+import toast from "react-hot-toast";
+import axios from "axios";
 const CourseDetails = () => {
   const { id } = useParams();
   const [courseData, setCourseData] = useState(null);
@@ -18,16 +20,72 @@ const CourseDetails = () => {
     calculateChapterTime,
     calculateCourseDuration,
     calculateNoOflectures,
+    backendUrl,
+    userData,
+    getToken,
   } = useContext(AppContext);
   const [rating, setRating] = useState(null);
 
   const fetchCourseData = async () => {
-    const course = allCourses.find((each) => each._id === id);
-    //console.log(course);
-    if (!course) return;
-    setRating(calculateAvgRating(course));
-    // console.log(rating);
-    setCourseData(course);
+    try {
+      const { data } = await axios.get(backendUrl + "/api/course/" + id);
+      if (data.success) {
+        setCourseData(data.courseData);
+      } else {
+        toast.error(data.message || "Failed to fetch course data");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const enrollCourse = async () => {
+    try {
+      if (!userData) {
+        toast.error("Please login to enroll in the course");
+        return;
+      }
+      if (isAlreadyEnrolled) {
+        toast.error("You are already enrolled in this course");
+        return;
+      }
+      if (!id) {
+        toast.error("Course ID not found");
+        return;
+      }
+
+      const token = await getToken();
+      console.log("Enrollment initiated for course ID:", id);
+
+      const { data } = await axios.post(
+        backendUrl + "/api/user/purchase",
+        { courseId: id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Enrollment data:", data);
+
+      if (data.success) {
+        const sessionUrl = data.session_url || data.sessionUrl;
+        if (sessionUrl) {
+          window.location.replace(sessionUrl);
+        } else {
+          console.error("No session URL returned from server", data);
+          toast.error("No session URL received from server");
+        }
+      } else {
+        toast.error(data.message || "Failed to enroll in course");
+      }
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      toast.error(
+        error.response?.data?.message || error.message || "Failed to enroll"
+      );
+    }
   };
 
   const toggleSection = (index) => {
@@ -42,6 +100,14 @@ const CourseDetails = () => {
       fetchCourseData();
     }
   }, [allCourses]);
+
+  useEffect(() => {
+    if (courseData && userData) {
+      if (courseData.enrolledStudents.includes(userData._id)) {
+        setIsAlreadyEnrolled(true);
+      }
+    }
+  }, [courseData, userData]);
 
   return courseData ? (
     <>
@@ -78,17 +144,19 @@ const CourseDetails = () => {
             </p>
           </div>
           <p>
-            {courseData.enrolledStudents.length} Students Enrolled in this
+            {courseData?.enrolledStudents?.length} Students Enrolled in this
             Course
           </p>
           <p className="text-base mt-2">
             Course offered by{" "}
-            <span className="text-blue-400 underline">VasuDreamAchiever</span>
+            <span className="text-blue-400 underline">
+              {courseData.educator.name}
+            </span>
           </p>
           <div className="pt-8 text-gray-800">
             <h2 className="text-xl font-semibold">Course Structure</h2>
             <div className="pt-5">
-              {courseData.courseContent.map((chapter, index) => (
+              {courseData?.courseContent?.map((chapter, index) => (
                 <div
                   key={index}
                   className="border border-gray-300 bg-white/70 mb-2 rounded hover:scale-100"
@@ -236,7 +304,10 @@ const CourseDetails = () => {
                 <p>{calculateNoOflectures(courseData)} lessons</p>
               </div>
             </div>
-            <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium cursor-pointer">
+            <button
+              onClick={enrollCourse}
+              className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium cursor-pointer"
+            >
               {isAlreadyEnrolled ? "Already Enrolled" : "Enroll Now 🙋"}
             </button>
             <div className="pt-4">

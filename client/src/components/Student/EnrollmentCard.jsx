@@ -5,15 +5,17 @@ import { Line } from "rc-progress";
 
 const EachEnrollemet = (props) => {
   const { calculateCourseDuration } = useContext(AppContext);
-  const { progressObj, course } = props;
+  const { progressObj = { totalLectures: 0, lecturesCompleted: 0 }, course } =
+    props;
   const navigate = useNavigate();
+  const totalLectures = progressObj.totalLectures || 0;
+  const lecturesCompleted = progressObj.lecturesCompleted || 0;
   const isLecturesCompleted =
-    progressObj.totalLectures / progressObj.lecturesCompleted === 1
-      ? true
-      : false;
-  const completionPercentage = Math.floor(
-    (progressObj.lecturesCompleted / progressObj.totalLectures) * 100
-  );
+    totalLectures > 0 && lecturesCompleted / totalLectures === 1;
+  const completionPercentage =
+    totalLectures > 0
+      ? Math.floor((lecturesCompleted / totalLectures) * 100)
+      : 0;
   console.log(completionPercentage);
   return (
     <tr

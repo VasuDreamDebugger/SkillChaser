@@ -42,6 +42,13 @@ export const userEnrolledCourses = async (req, res) => {
 export const purchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
+
+    if (!courseId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Course ID is required" });
+    }
+
     const auth = req.auth();
     const { userId } = auth;
     const { origin } = req.headers;

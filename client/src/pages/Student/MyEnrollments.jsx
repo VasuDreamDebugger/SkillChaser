@@ -1,22 +1,63 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Link, useNavigate } from "react-router-dom";
 import EnrollmentCard from "../../components/Student/EnrollmentCard";
 import Footer from "../../components/Student/Footer";
+import axios from "axios";
 const MyEnrollments = () => {
-  const { enrolledCourses, calculateCourseDuration } = useContext(AppContext);
+  const {
+    enrolledCourses,
+    calculateCourseDuration,
+    fetchEnrolledCourses,
+    backendUrl,
+    getToken,
+    userData,
+    calculateNoOfLectures,
+  } = useContext(AppContext);
   const navigate = useNavigate();
-  const [progressArray, setProgressArray] = useState([
-    { lecturesCompleted: 2, totalLectures: 4 },
-    { lecturesCompleted: 5, totalLectures: 9 },
-    { lecturesCompleted: 6, totalLectures: 6 },
-    { lecturesCompleted: 1, totalLectures: 6 },
-    { lecturesCompleted: 8, totalLectures: 8 },
-    { lecturesCompleted: 7, totalLectures: 9 },
-    { lecturesCompleted: 4, totalLectures: 7 },
-    { lecturesCompleted: 8, totalLectures: 12 },
-    { lecturesCompleted: 2, totalLectures: 4 },
-  ]);
+  const [progressArray, setProgressArray] = useState([]);
+
+  const getCourseProgress = async () => {
+    try {
+      const token = await getToken();
+      const tempProgressArray = await Promise.all(
+        enrolledCourses.map(async (course) => {
+          const response = await axios.post(
+            backendUrl + `/api/user/get-course-progress`,
+            { courseId: course._id },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const { data } = response;
+
+          let totalLectures = calculateNoOfLectures(course);
+          const lecturesCompleted = data.progressData
+            ? data.progressData.lectureCompleted.length
+            : 0;
+
+          return { totalLectures, lecturesCompleted };
+        })
+      );
+      setProgressArray(tempProgressArray);
+    } catch (error) {
+      console.log("Error fetching course progress:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userData) {
+      fetchEnrolledCourses();
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (enrolledCourses.length > 0) {
+      getCourseProgress();
+    }
+  }, [enrolledCourses]);
 
   return (
     <>
@@ -43,7 +84,12 @@ const MyEnrollments = () => {
             {enrolledCourses.map((course, index) => (
               <EnrollmentCard
                 key={index}
-                progressObj={progressArray[index]}
+                progressObj={
+                  progressArray[index] || {
+                    totalLectures: 0,
+                    lecturesCompleted: 0,
+                  }
+                }
                 course={course}
               />
             ))}
