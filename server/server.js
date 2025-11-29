@@ -6,7 +6,7 @@ import educatorRoutes from "./routes/educatorRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
 import connectCloudinary from "./configs/cloudinary.js";
 import userRouter from "./routes/userRoutes.js";
-
+import courseRouter from "./routes/courseRoutes.js";
 const app = express();
 
 app.use(cors());
@@ -25,6 +25,7 @@ app.get("/api/ping", (req, res) => {
 
 app.use("/api/educator", express.json(), educatorRoutes);
 app.use("/api/user", express.json(), userRouter);
+app.use("/api/course", express.json(), courseRouter);
 
 // Clerk webhook route must use raw body
 app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);

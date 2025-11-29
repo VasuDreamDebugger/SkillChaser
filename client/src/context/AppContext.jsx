@@ -4,22 +4,64 @@ import { AppContext } from "./AppContext";
 import humanizeDuration from "humanize-duration";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { jwtDecode } from "jwt-decode";
+import { toast as toastify } from "react-toastify";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 
 export const AppContextProvider = (props) => {
   const currency = import.meta.env.VITE_CURRENCY;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
   const [allCourses, setAllCourses] = useState([]);
-  const [isEducator, setIsEducator] = useState(true);
+  const [isEducator, setIsEducator] = useState(false);
   const [enrolledCourses, setEnrolledCourse] = useState([]);
+  const [userData, setUserData] = useState(null);
   const { getToken } = useAuth();
   const { user } = useUser();
 
   //fetch all course
   const fetchAllCourses = async () => {
-    setAllCourses(dummyCourses);
+    try {
+      const response = await axios.get(backendUrl + "/api/course/all");
+      const { data } = response;
+      if (data.success) {
+        setAllCourses(data.courses);
+      } else {
+        toastify.error(data.message);
+        console.log("Error fetching courses:", data.message);
+      }
+    } catch (error) {
+      console.log("Error fetching courses:", error);
+      toastify.error("Error fetching courses");
+    }
+  };
+
+  //Fetch user data
+  const fetchUserData = async () => {
+    try {
+      let token = await getToken();
+      const response = await axios.get(backendUrl + "/api/user/data", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const { data } = response;
+      if (data.success) {
+        setUserData(data.user);
+        toast.success("LoggedIn successfully");
+        if (user.publicMetadata.role === "educator") {
+          setIsEducator(true);
+        }
+      } else {
+        toastify.error(data.message);
+      }
+    } catch (error) {
+      console.log("Error fetching user data:", error);
+      toastify.error("Error fetching user data");
+    }
   };
 
   //calculate Avg rating
-
   const calculateAvgRating = (course) => {
     const { courseRatings } = course;
 
@@ -48,6 +90,7 @@ export const AppContextProvider = (props) => {
     console.log(du);
     return du;
   };
+
   //Function to Calculate Course duration
   const calculateCourseDuration = (course) => {
     let time = 0;
@@ -58,7 +101,6 @@ export const AppContextProvider = (props) => {
   };
 
   //Function to calculate No of lectures in course
-
   const calculateNoOflectures = (course) => {
     let totalLectures = 0;
     course.courseContent.forEach((chapter) => {
@@ -71,12 +113,24 @@ export const AppContextProvider = (props) => {
 
   //fetch user enrolled courses
   const fetchEnrolledCourse = async () => {
-    setEnrolledCourse(dummyCourses);
+    try {
+      let token = await getToken();
+      const response = await axios.get(
+        backendUrl + "/api/user/enrolled-courses",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const { data } = response;
+      if (data.success) {
+        setEnrolledCourse(data.enrolledCourses);
+      }
+    } catch (error) {
+      console.log("Error fetching enrolled courses:", error);
+    }
   };
-  useEffect(() => {
-    fetchAllCourses();
-    fetchEnrolledCourse();
-  }, []);
 
   const logToken = async () => {
     const token = await getToken(); // returns a JWT string
@@ -85,26 +139,15 @@ export const AppContextProvider = (props) => {
     console.log(payload);
   };
 
-  // const BecomeEdu = async () => {
-  //   try {
-  //     let token = await getToken();
-  //     await fetch("http://localhost:5000/api/educator/update-role", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`, // attach token here
-  //       },
-  //       body: JSON.stringify({ role: "educator" }),
-  //     });
-  //   } catch (error) {
-  //     console.log(error.stack);
-  //   }
-  // };
+  useEffect(() => {
+    fetchAllCourses();
+  }, []);
 
   useEffect(() => {
     if (user) {
       logToken();
-      // BecomeEdu();
+      fetchUserData();
+      fetchEnrolledCourse();
     }
   }, [user]);
 
@@ -119,7 +162,13 @@ export const AppContextProvider = (props) => {
     calculateNoOflectures,
     enrolledCourses,
     fetchEnrolledCourse,
+    backendUrl,
+    userData,
+    setUserData,
+    fetchAllCourses,
+    getToken,
   };
+
   return (
     <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
   );
