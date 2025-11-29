@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { Line } from "rc-progress";
+import axios from "axios";
 
 const EachEnrollemet = (props) => {
   const { calculateCourseDuration } = useContext(AppContext);

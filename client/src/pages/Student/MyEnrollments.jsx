@@ -12,7 +12,7 @@ const MyEnrollments = () => {
     backendUrl,
     getToken,
     userData,
-    calculateNoOfLectures,
+    calculateNoOflectures,
   } = useContext(AppContext);
   const navigate = useNavigate();
   const [progressArray, setProgressArray] = useState([]);
@@ -33,7 +33,7 @@ const MyEnrollments = () => {
           );
           const { data } = response;
 
-          let totalLectures = calculateNoOfLectures(course);
+          let totalLectures = calculateNoOflectures(course);
           const lecturesCompleted = data.progressData
             ? data.progressData.lectureCompleted.length
             : 0;

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
@@ -6,6 +7,7 @@ import humanizeDuration from "humanize-duration";
 import Footer from "../../components/Student/Footer";
 import Youtube from "react-youtube";
 import toast from "react-hot-toast";
+
 import axios from "axios";
 const CourseDetails = () => {
   const { id } = useParams();
@@ -13,6 +15,7 @@ const CourseDetails = () => {
   const [openSection, setOpenSection] = useState({});
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [playerData, setPlayerData] = useState(null);
+  const navigate = useNavigate();
   const {
     allCourses,
     currency,
@@ -46,8 +49,7 @@ const CourseDetails = () => {
         return;
       }
       if (isAlreadyEnrolled) {
-        toast.error("You are already enrolled in this course");
-        return;
+        navigate(`/player/${id}`);
       }
       if (!id) {
         toast.error("Course ID not found");
@@ -308,7 +310,9 @@ const CourseDetails = () => {
               onClick={enrollCourse}
               className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium cursor-pointer"
             >
-              {isAlreadyEnrolled ? "Already Enrolled" : "Enroll Now 🙋"}
+              {isAlreadyEnrolled
+                ? "Already Enrolled Learn Now"
+                : "Enroll Now 🙋"}
             </button>
             <div className="pt-4">
               <h1 className="md:text-xl text-lg font-medium text-gray-800">

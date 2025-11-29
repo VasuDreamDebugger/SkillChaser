@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Loading = () => {
-  const { path } = useParamsarams();
+  const { path } = useParams();
   const navigate = useNavigate();
   useEffect(() => {
     const timer = setTimeout(() => {

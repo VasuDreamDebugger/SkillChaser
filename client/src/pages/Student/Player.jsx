@@ -6,19 +6,39 @@ import humanizeDuration from "humanize-duration";
 import YouTube from "react-youtube";
 import Footer from "../../components/Student/Footer";
 import Rating from "../../components/Student/Rating";
+import { toast } from "react-hot-toast";
+import Loading from "../../components/Student/Loading";
+import axios from "axios";
 
 const Player = () => {
-  const { enrolledCourses, calculateChapterTime } = useContext(AppContext);
+  const {
+    enrolledCourses,
+    calculateChapterTime,
+    backendUrl,
+    getToken,
+    userData,
+    fetchEnrolledCourses,
+  } = useContext(AppContext);
   const { courseId } = useParams();
   const [courseData, setCourseData] = useState(null);
   const [playerData, setPlayerData] = useState(null);
   const [openSection, setOpenSection] = useState({});
+  const [progressData, setProgressData] = useState(null);
+  const [initialRating, setInitialRating] = useState(0);
+  const [openNotes, setOpenNotes] = useState(false);
 
   const getCourseData = () => {
-    const selectedCourse = enrolledCourses.find(
-      (course) => course._id === courseId
-    );
-    setCourseData(selectedCourse);
+    enrolledCourses.map((course) => {
+      if (course._id === courseId) {
+        setCourseData(course);
+        console.log("course data set in player:", course);
+        course.courseRatings.map((item) => {
+          if (item.userId === userData._id) {
+            setInitialRating(item.rating);
+          }
+        });
+      }
+    });
   };
 
   const toggleSection = (index) => {
@@ -29,9 +49,82 @@ const Player = () => {
   };
 
   useEffect(() => {
-    getCourseData();
+    if (enrolledCourses.length > 0) {
+      getCourseData();
+    }
   }, [enrolledCourses]);
-  return (
+
+  const markLectureAsCompleted = async (lectureId) => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        backendUrl + "/api/user/update-course-progress",
+        { courseId, lectureId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        getCourseProgress();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const getCourseProgress = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        backendUrl + "/api/user/get-course-progress",
+        { courseId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (data.success) {
+        setProgressData(data.progressData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleRate = async (rating) => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        backendUrl + "/api/user/add-rating",
+        { courseId, rating },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchEnrolledCourses();
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    getCourseProgress();
+  }, []);
+
+  return courseData ? (
     <>
       <div className="p-4 sm:p-10 flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:px-30">
         {/* Left section */}
@@ -77,7 +170,12 @@ const Player = () => {
                         <li key={i} className="flex items-center gap-2 py-1 ">
                           <img
                             src={
-                              false ? assets.blue_tick_icon : assets.play_icon
+                              progressData &&
+                              progressData.lectureCompleted.includes(
+                                lecture.lectureId
+                              )
+                                ? assets.blue_tick_icon
+                                : assets.play_icon
                             }
                             alt="play"
                             className="w-4 h-4 mt-1 cursor-pointer"
@@ -123,7 +221,32 @@ const Player = () => {
           </div>
           <div className="flex items-center gap-2 py-3 mt-10">
             <h1>Rate this Course :</h1>
-            <Rating initialRating={0} />
+            <Rating initialRating={initialRating} onRate={handleRate} />
+          </div>
+          <div
+            className="flex items-center gap-2 cursor-pointer mt-4"
+            onClick={() => setOpenNotes(!openNotes)}
+          >
+            <img
+              src={assets.down_arrow_icon}
+              alt="arrow"
+              className={`transform transition-transform ${
+                openNotes ? "rotate-180" : ""
+              }`}
+            />
+            <p className="font-medium md:text-xl text-lg">Read Notes</p>
+          </div>
+          <div
+            className={`mt-2 text-gray-700 text-md overflow-hidden transition-all duration-700 ${
+              openNotes ? "max-h-96" : "max-h-0"
+            }`}
+          >
+            <p>
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Nam
+              nesciunt, dolor quas deleniti sint dolorum eum, dicta suscipit
+              dignissimos, ad officia inventore. Laborum ratione eveniet, porro
+              deserunt ducimus dolore atque.
+            </p>
           </div>
         </div>
 
@@ -145,8 +268,14 @@ const Player = () => {
                   {playerData.chapter}.{playerData.lecture}{" "}
                   {playerData.lectureTitle}
                 </p>
-                <button className="text-blue-500">
-                  {false ? "completed" : "Mark as completed"}
+                <button
+                  onClick={() => markLectureAsCompleted(playerData.lectureId)}
+                  className="text-blue-500"
+                >
+                  {progressData &&
+                  progressData.lectureCompleted.includes(playerData.lectureId)
+                    ? "Completed"
+                    : "Mark as completed"}
                 </button>
               </div>
             </div>
@@ -156,6 +285,8 @@ const Player = () => {
         </div>
       </div>
     </>
+  ) : (
+    <h1 className="text-center">Loading..</h1>
   );
 };
 

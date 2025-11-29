@@ -1,15 +1,34 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import Loading from "../../components/Student/Loading";
+import axios from "axios";
+import toast from "react-hot-toast";
 const MyCourses = () => {
   const [courses, setCourses] = useState(null);
-  const { currency, allCourses } = useContext(AppContext);
+  const { currency, backendUrl, getToken, isEducator } = useContext(AppContext);
   const fetchEducatorCourses = async () => {
-    setCourses(allCourses);
+    try {
+      const token = await getToken();
+      if (!isEducator) {
+        toast.error("You are not authorized to view this page.");
+        return;
+      }
+      const { data } = await axios.get(backendUrl + `/api/educator/courses`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Educator course", data);
+      data.success && setCourses(data.courses);
+    } catch (error) {
+      console.error("Error fetching educator courses:", error);
+      toast.error("Failed to fetch courses.");
+    }
   };
   useEffect(() => {
-    fetchEducatorCourses();
-  }, []);
+    if (isEducator) fetchEducatorCourses();
+  }, [isEducator]);
+
   return courses ? (
     <div className="h-screen flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0">
       <div className="w-full">

@@ -1,16 +1,40 @@
 import React, { useState, useContext, useEffect } from "react";
 import { dummyStudentEnrolled } from "../../assets/assets";
 import Loading from "../../components/Student/Loading";
+import { AppContext } from "../../context/AppContext";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const StudentsEnrolled = () => {
   const [enrolledStudents, setEnrolledStudents] = useState(null);
+  const { backendUrl, getToken, isEducator } = useContext(AppContext);
+
   const fetchEnrolledStudents = async () => {
-    setEnrolledStudents(dummyStudentEnrolled);
+    try {
+      const token = await getToken();
+      if (!isEducator) {
+        toast.error("You are not authorized to view this page.");
+        return;
+      }
+      const { data } = await axios.get(
+        backendUrl + `/api/educator/enrolled-students`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // console.log("Enrolled students data", data);
+      data.success && setEnrolledStudents(data.enrolledStudents.reverse());
+    } catch (error) {
+      console.error("Error fetching enrolled students:", error);
+      toast.error("Failed to fetch enrolled students.");
+    }
   };
 
   useEffect(() => {
-    fetchEnrolledStudents();
-  }, []);
+    isEducator && fetchEnrolledStudents();
+  }, [isEducator]);
   return enrolledStudents ? (
     <div className="min-h-screen flex flex-col items-start gap-8 md:p-8 md:pb-0 p-4 pt-8 pb-0">
       <h1 className="text-base text-gray-600 text-bold text-[20px]">

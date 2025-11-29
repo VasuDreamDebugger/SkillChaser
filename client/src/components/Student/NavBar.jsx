@@ -17,6 +17,11 @@ const NavBar = () => {
   const becomeEducator = async () => {
     console.log("become edu clicked");
     try {
+      if (!user) {
+        toast.error("Please sign in to become an educator");
+        //openSignIn();
+        return;
+      }
       if (user.publicMetadata.role === "educator") {
         navigate("/educator");
       } else {
@@ -63,10 +68,10 @@ const NavBar = () => {
         {/* For Desktop view */}
         <div className="hidden md:flex items-center gap-5 text-gray-500">
           <div className="flex items-center gap-2">
-            <button onClick={() => becomeEducator()}>
+            <button onClick={() => becomeEducator()} className="cursor-pointer">
               {isEducator ? "Educator Dashboard" : "Become Educator"}{" "}
             </button>
-            |<Link to="/my-enrollments"> My Enrollments</Link>
+            | {user && <Link to="/my-enrollments"> My Enrollments</Link>}
           </div>
           {user ? (
             <UserButton />

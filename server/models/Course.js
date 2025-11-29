@@ -18,7 +18,10 @@ const lectureSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    isPreview: {
+    lectureNotes: {
+      type: String,
+    },
+    isPreviewFree: {
       type: String,
     },
     lectureOrder: {

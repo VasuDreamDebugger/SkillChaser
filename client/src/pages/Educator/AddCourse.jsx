@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import uniqid from "uniqid";
 import Quill from "quill";
 import { assets } from "../../assets/assets";
+import axios from "axios";
+import { AppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 const initialLectureDetails = {
   lectureTitle: "",
   lectureDuration: "",
   lectureUrl: "",
+  lectureNotes: "",
   isPreviewFree: false,
 };
 
@@ -21,6 +25,8 @@ const AddCourse = () => {
   const [lectureDetails, setLectureDetails] = useState(initialLectureDetails);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
+
+  const { backendUrl, getToken } = useContext(AppContext);
 
   const handleChapter = (action, chapterId) => {
     if (action == "add") {
@@ -89,7 +95,49 @@ const AddCourse = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+      if (!image) {
+        toast.error("Thumbnail Not Selected");
+      }
+
+      const courseData = {
+        courseTitle,
+        courseDescription: quillRef.current.root.innerHTML,
+        coursePrice: Number(coursePrice),
+        discount: Number(discount),
+        courseContent: chapters,
+      };
+
+      const formData = new FormData();
+      formData.append("courseData", JSON.stringify(courseData));
+      formData.append("image", image);
+      const token = await getToken();
+
+      const { data } = await axios.post(
+        backendUrl + "/api/educator/add-course",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        setCourseTitle("");
+        setCoursePrice(0);
+        setDiscount(0);
+        setImage(null);
+        setChapters([]);
+        quillRef.current.root.innerHTML = "";
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   useEffect(() => {
@@ -127,6 +175,8 @@ const AddCourse = () => {
             <p>Course Price</p>
             <input
               type="number"
+              onChange={(e) => setCoursePrice(e.target.value)}
+              value={coursePrice}
               placeholder="0"
               className="outline-none md:py-2.5 py-2 w-28 px-3 rounded border border-gray-500"
               min={0}
@@ -260,7 +310,7 @@ const AddCourse = () => {
           </div>
           {showPopup && (
             <div className="fixed inset-0 flex items-center justify-center bg-gray-500 ">
-              <div className="bg-white text-gray-700 p-4 rounded relative w-full max-w-100 h-100">
+              <div className="bg-white text-gray-700 p-4 rounded relative w-full max-w-100 h-auto">
                 <h2 className="text-lg font-semibold mb-4">Add Lecture</h2>
 
                 <div className="mb-2">
@@ -302,6 +352,22 @@ const AddCourse = () => {
                       setLectureDetails({
                         ...lectureDetails,
                         lectureUrl: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <p>Lecture Notes</p>
+                  <textarea
+                    rows={3}
+                    cols={3}
+                    className="mt-1 block w-full  border rounded py-1 px-2"
+                    value={lectureDetails.lectuerNotes}
+                    onChange={(e) =>
+                      setLectureDetails({
+                        ...lectureDetails,
+                        lectureNotes: e.target.value,
                       })
                     }
                   />
