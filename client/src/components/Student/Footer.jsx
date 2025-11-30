@@ -1,5 +1,4 @@
 import React from "react";
-import { assets } from "../../assets/assets";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -10,7 +9,17 @@ const Footer = () => {
       justify-center gap-5 md:gap-20 py-5 border-b border-white/30"
       >
         <div className="flex flex-col md:items-start items-center w-full">
-          <img src={assets.logo} className="" alt="logo" />
+          <style>{`\n            @keyframes footerRunner {\n              0% { transform: translateY(0) rotate(0deg); }\n              50% { transform: translateY(-4px) rotate(4deg); }\n              100% { transform: translateY(0) rotate(0deg); }\n            }\n            .footer-logo-emoji { display:inline-block; animation: footerRunner 1.6s ease-in-out infinite; }\n          `}</style>
+
+          <Link to="/" className="no-underline">
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-md hover:scale-105 hover:shadow-lg transition-transform">
+              <span>SkillChaser</span>
+              <span className="footer-logo-emoji" aria-hidden>
+                🏃‍➡️
+              </span>
+            </div>
+          </Link>
+
           <p className="mt-6 text-center md:text-left text-sm text-white/80">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate
           </p>

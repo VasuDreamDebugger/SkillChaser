@@ -4,6 +4,7 @@ import { AppContext } from "../../context/AppContext";
 import CourseCard from "../../components/Student/CourseCard";
 import { assets } from "../../assets/assets";
 import Footer from "../../components/Student/Footer";
+import { CourseListLoading } from "../../components/Student/LoadingEffects";
 
 // Skeleton loader component
 const SkeletonCard = () => (
@@ -32,6 +33,7 @@ const CoursesList = () => {
   const [courseInput, setCourseInput] = useState("");
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFullPageLoader, setShowFullPageLoader] = useState(true);
 
   const getFilteredCourse = () => {
     setLoading(true);
@@ -51,6 +53,14 @@ const CoursesList = () => {
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFullPageLoader(false);
+      getFilteredCourse();
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     getFilteredCourse();
   }, [courseInput, allCourses]);
 
@@ -58,6 +68,10 @@ const CoursesList = () => {
     e.preventDefault();
     getFilteredCourse();
   };
+
+  if (showFullPageLoader) {
+    return <CourseListLoading />;
+  }
 
   return (
     <>

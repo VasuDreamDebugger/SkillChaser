@@ -7,7 +7,7 @@ import YouTube from "react-youtube";
 import Footer from "../../components/Student/Footer";
 import Rating from "../../components/Student/Rating";
 import { toast } from "react-hot-toast";
-import Loading from "../../components/Student/Loading";
+import { PlayerLoading } from "../../components/Student/LoadingEffects";
 import axios from "axios";
 
 const Player = () => {
@@ -26,6 +26,7 @@ const Player = () => {
   const [progressData, setProgressData] = useState(null);
   const [initialRating, setInitialRating] = useState(0);
   const [openNotes, setOpenNotes] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getCourseData = () => {
     enrolledCourses.map((course) => {
@@ -39,6 +40,7 @@ const Player = () => {
         });
       }
     });
+    setIsLoading(false);
   };
 
   const toggleSection = (index) => {
@@ -123,6 +125,10 @@ const Player = () => {
   useEffect(() => {
     getCourseProgress();
   }, []);
+
+  if (isLoading) {
+    return <PlayerLoading />;
+  }
 
   return courseData ? (
     <>
@@ -286,7 +292,7 @@ const Player = () => {
       </div>
     </>
   ) : (
-    <h1 className="text-center">Loading..</h1>
+    <PlayerLoading />
   );
 };
 

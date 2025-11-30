@@ -1,11 +1,13 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
-import Loading from "../../components/Student/Loading";
+import { MyCoursesLoading } from "../../components/Student/LoadingEffects";
 import axios from "axios";
 import toast from "react-hot-toast";
+
 const MyCourses = () => {
   const [courses, setCourses] = useState(null);
   const { currency, backendUrl, getToken, isEducator } = useContext(AppContext);
+
   const fetchEducatorCourses = async () => {
     try {
       const token = await getToken();
@@ -25,6 +27,7 @@ const MyCourses = () => {
       toast.error("Failed to fetch courses.");
     }
   };
+
   useEffect(() => {
     if (isEducator) fetchEducatorCourses();
   }, [isEducator]);
@@ -82,7 +85,7 @@ const MyCourses = () => {
       </div>
     </div>
   ) : (
-    <Loading />
+    <MyCoursesLoading />
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { dummyStudentEnrolled } from "../../assets/assets";
-import Loading from "../../components/Student/Loading";
+import { StudentsEnrolledLoading } from "../../components/Student/LoadingEffects";
 import { AppContext } from "../../context/AppContext";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -35,6 +35,7 @@ const StudentsEnrolled = () => {
   useEffect(() => {
     isEducator && fetchEnrolledStudents();
   }, [isEducator]);
+
   return enrolledStudents ? (
     <div className="min-h-screen flex flex-col items-start gap-8 md:p-8 md:pb-0 p-4 pt-8 pb-0">
       <h1 className="text-base text-gray-600 text-bold text-[20px]">
@@ -81,7 +82,7 @@ const StudentsEnrolled = () => {
       </div>
     </div>
   ) : (
-    <Loading />
+    <StudentsEnrolledLoading />
   );
 };
 

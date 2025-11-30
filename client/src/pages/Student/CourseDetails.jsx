@@ -7,6 +7,7 @@ import humanizeDuration from "humanize-duration";
 import Footer from "../../components/Student/Footer";
 import Youtube from "react-youtube";
 import toast from "react-hot-toast";
+import { CourseDetailsLoading } from "../../components/Student/LoadingEffects";
 
 import axios from "axios";
 const CourseDetails = () => {
@@ -332,7 +333,7 @@ const CourseDetails = () => {
       <Footer />
     </>
   ) : (
-    "loading"
+    <CourseDetailsLoading />
   );
 };
 

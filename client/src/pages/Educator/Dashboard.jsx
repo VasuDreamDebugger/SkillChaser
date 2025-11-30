@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { dummyDashboardData } from "../../assets/assets";
 import { AppContext } from "../../context/AppContext";
-import Loading from "../../components/Student/Loading";
+import { DashboardLoading } from "../../components/Student/LoadingEffects";
 import { assets } from "../../assets/assets";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -104,7 +104,7 @@ const Dashboard = () => {
       </div>
     </div>
   ) : (
-    <Loading />
+    <DashboardLoading />
   );
 };
 

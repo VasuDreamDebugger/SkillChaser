@@ -3,7 +3,9 @@ import { AppContext } from "../../context/AppContext";
 import { Link, useNavigate } from "react-router-dom";
 import EnrollmentCard from "../../components/Student/EnrollmentCard";
 import Footer from "../../components/Student/Footer";
+import { MyEnrollmentsLoading } from "../../components/Student/LoadingEffects";
 import axios from "axios";
+
 const MyEnrollments = () => {
   const {
     enrolledCourses,
@@ -16,6 +18,7 @@ const MyEnrollments = () => {
   } = useContext(AppContext);
   const navigate = useNavigate();
   const [progressArray, setProgressArray] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getCourseProgress = async () => {
     try {
@@ -42,8 +45,10 @@ const MyEnrollments = () => {
         })
       );
       setProgressArray(tempProgressArray);
+      setIsLoading(false);
     } catch (error) {
       console.log("Error fetching course progress:", error);
+      setIsLoading(false);
     }
   };
 
@@ -56,8 +61,14 @@ const MyEnrollments = () => {
   useEffect(() => {
     if (enrolledCourses.length > 0) {
       getCourseProgress();
+    } else if (userData) {
+      setIsLoading(false);
     }
   }, [enrolledCourses]);
+
+  if (isLoading && enrolledCourses.length > 0) {
+    return <MyEnrollmentsLoading />;
+  }
 
   return (
     <>
