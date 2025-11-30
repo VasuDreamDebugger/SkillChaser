@@ -51,6 +51,7 @@ const CourseDetails = () => {
       }
       if (isAlreadyEnrolled) {
         navigate(`/player/${id}`);
+        return;
       }
       if (!id) {
         toast.error("Course ID not found");
