@@ -10,6 +10,15 @@ import { toast } from "react-hot-toast";
 import { PlayerLoading } from "../../components/Student/LoadingEffects";
 import axios from "axios";
 
+// Helper function to extract YouTube video ID from any full URL
+function getYouTubeVideoId(url) {
+  // Handles youtube.com, youtu.be, shorts, and playlist formats
+  const regex =
+    /(?:youtube\.com\/(?:.*v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+}
+
 const Player = () => {
   const {
     enrolledCourses,
@@ -132,7 +141,7 @@ const Player = () => {
 
   return courseData ? (
     <>
-      <div className="p-4 sm:p-10 flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:px-30">
+      <div className="p-4 sm:p-10 flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:px-10">
         {/* Left section */}
         <div className="text-gray-800">
           <h1 className="text-xl font-semibold">Course Structure</h1>
@@ -243,16 +252,21 @@ const Player = () => {
             <p className="font-medium md:text-xl text-lg">Read Notes</p>
           </div>
           <div
-            className={`mt-2 text-gray-700 text-md overflow-hidden transition-all duration-700 ${
+            className={`mt-2 text-gray-700 text-md overflow-auto transition-all duration-700 ${
               openNotes ? "max-h-96" : "max-h-0"
             }`}
           >
-            <p>
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Nam
-              nesciunt, dolor quas deleniti sint dolorum eum, dicta suscipit
-              dignissimos, ad officia inventore. Laborum ratione eveniet, porro
-              deserunt ducimus dolore atque.
-            </p>
+            {playerData && playerData.lectureNotes ? (
+              <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                <p className="text-sm md:text-base whitespace-pre-wrap">
+                  {playerData.lectureNotes}
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">
+                No notes available for this lecture
+              </p>
+            )}
           </div>
         </div>
 
@@ -260,15 +274,30 @@ const Player = () => {
         <div>
           {playerData ? (
             <div>
-              <YouTube
-                videoId={playerData.lectureUrl.split("/").pop()}
-                opts={{
-                  playerVars: {
-                    autoplay: 1,
-                  },
-                }}
-                iframeClassName="w-full aspect-video"
-              />
+              {(() => {
+                const videoId = getYouTubeVideoId(playerData.lectureUrl);
+
+                if (!videoId) {
+                  console.error("Invalid YouTube URL:", playerData.lectureUrl);
+                  return (
+                    <div className="w-full aspect-video bg-gray-200 flex items-center justify-center rounded">
+                      <p className="text-gray-600">Invalid video URL</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <YouTube
+                    videoId={videoId}
+                    opts={{
+                      playerVars: {
+                        autoplay: 1,
+                      },
+                    }}
+                    iframeClassName="w-full aspect-video"
+                  />
+                );
+              })()}
               <div className="flex justify-between items-center mt-2">
                 <p className="text-[14px]">
                   {playerData.chapter}.{playerData.lecture}{" "}

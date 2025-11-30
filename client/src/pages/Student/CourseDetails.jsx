@@ -7,15 +7,27 @@ import humanizeDuration from "humanize-duration";
 import Footer from "../../components/Student/Footer";
 import Youtube from "react-youtube";
 import toast from "react-hot-toast";
+
 import { CourseDetailsLoading } from "../../components/Student/LoadingEffects";
 
 import axios from "axios";
+
+// Helper function to extract YouTube video ID from any full URL
+function getYouTubeVideoId(url) {
+  // Handles youtube.com, youtu.be, shorts, and playlist formats
+  const regex =
+    /(?:youtube\.com\/(?:.*v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+}
+
 const CourseDetails = () => {
   const { id } = useParams();
   const [courseData, setCourseData] = useState(null);
   const [openSection, setOpenSection] = useState({});
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [playerData, setPlayerData] = useState(null);
+
   const navigate = useNavigate();
   const {
     allCourses,
@@ -47,6 +59,7 @@ const CourseDetails = () => {
     try {
       if (!userData) {
         toast.error("Please login to enroll in the course");
+
         return;
       }
       if (isAlreadyEnrolled) {
@@ -82,13 +95,27 @@ const CourseDetails = () => {
           toast.error("No session URL received from server");
         }
       } else {
-        toast.error(data.message || "Failed to enroll in course");
+        // Handle error message - it might be an object
+        const errorMessage =
+          typeof data.message === "string"
+            ? data.message
+            : data.message?.message || "Failed to enroll in course";
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Enrollment error:", error);
-      toast.error(
-        error.response?.data?.message || error.message || "Failed to enroll"
-      );
+      let errorMessage = "Failed to enroll";
+
+      if (error.response?.data?.message) {
+        errorMessage =
+          typeof error.response.data.message === "string"
+            ? error.response.data.message
+            : error.response.data.message?.message || errorMessage;
+      } else if (typeof error.message === "string") {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -208,11 +235,18 @@ const CourseDetails = () => {
                                 <p
                                   className="text-blue-500 cursor-pointer"
                                   onClick={() => {
-                                    setPlayerData({
-                                      videoId: lecture.lectureUrl
-                                        .split("/")
-                                        .pop(),
-                                    });
+                                    const videoId = getYouTubeVideoId(
+                                      lecture.lectureUrl
+                                    );
+                                    if (videoId) {
+                                      setPlayerData({ videoId });
+                                    } else {
+                                      toast.error("Invalid video URL");
+                                      console.error(
+                                        "Invalid YouTube URL:",
+                                        lecture.lectureUrl
+                                      );
+                                    }
                                   }}
                                 >
                                   preview
@@ -249,15 +283,21 @@ const CourseDetails = () => {
         {/* Right section */}
         <div className="max-w-[500px] z-10 shadow-[5px_5px_15px_5px] shadow-cyan-100 rounded-t md:rounded overflow-hidden bg-white min-w-[300px] sm:min-w-[420px]">
           {playerData ? (
-            <Youtube
-              videoId={playerData.videoId}
-              opts={{
-                playerVars: {
-                  autoplay: 1,
-                },
-              }}
-              iframeClassName="w-full aspect-video"
-            />
+            playerData.videoId ? (
+              <Youtube
+                videoId={playerData.videoId}
+                opts={{
+                  playerVars: {
+                    autoplay: 1,
+                  },
+                }}
+                iframeClassName="w-full aspect-video"
+              />
+            ) : (
+              <div className="w-full aspect-video bg-gray-200 flex items-center justify-center">
+                <p className="text-gray-600">Invalid video URL</p>
+              </div>
+            )
           ) : (
             <img src={courseData.courseThumbnail} alt="" />
           )}

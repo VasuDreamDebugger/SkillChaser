@@ -73,6 +73,10 @@ const AddCourse = () => {
     }
   };
 
+  const resetLectureDetails = () => {
+    setLectureDetails(initialLectureDetails);
+  };
+
   const addLecture = () => {
     setChapters(
       chapters.map((chapter) => {
@@ -91,7 +95,7 @@ const AddCourse = () => {
       })
     );
     setShowPopup(false);
-    setLectureDetails(initialLectureDetails);
+    resetLectureDetails();
   };
 
   const handleSubmit = async (e) => {
@@ -285,7 +289,7 @@ const AddCourse = () => {
                             handleLecture(
                               "remove",
                               chapter.chapterId,
-                              lectureDetails
+                              lectureIndex
                             )
                           }
                         />
@@ -396,7 +400,10 @@ const AddCourse = () => {
                 </button>
                 <img
                   src={assets.cross_icon}
-                  onClick={() => setShowPopup(false)}
+                  onClick={() => {
+                    setShowPopup(false);
+                    resetLectureDetails();
+                  }}
                   className="absolute top-4 right-4 w-4 cursor-pointer"
                   alt=""
                 />
